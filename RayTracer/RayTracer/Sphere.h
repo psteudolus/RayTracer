@@ -6,11 +6,12 @@
 class Sphere : public Hitable {
 public:
 	Sphere() {}
-	Sphere(Vec3 cen, float r) : center(cen), radius(r) {};
+	Sphere(Vec3 cen, float r, Material* matPtrIn) : center(cen), radius(r), matPtr(matPtrIn) {};
 	virtual bool hit(const Ray& r, float tMin, float tMax, HitRecord& rec) const;
 
 	Vec3 center;
 	float radius;
+	Material* matPtr;
 };
 
 bool Sphere::hit(const Ray& r, float tMin, float tMax, HitRecord& rec) const {
