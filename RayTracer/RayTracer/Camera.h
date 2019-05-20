@@ -2,17 +2,32 @@
 #define CAMERAH
 
 #include "Ray.h"
+double getPI() {
+	double pi;
+	__asm {
+		fldpi
+		fstp pi
+	}
+	return pi;
+}
 
 class Camera {
 public:
-	Camera() {
-		lowerLeftCorner = Vec3(-2.3, -1.0, -1.0);
-		horizontal = Vec3(4.6, 0.0, 0.0);
-		vertical = Vec3(0.0, 2.0, 0.0);
-		origin = Vec3(0.0, 0.0, 0.0);
+	Camera(Vec3 lookFrom, Vec3 lookAt, Vec3 vup, float verticalFov, float aspect) {
+		Vec3 u, v, w;
+		float theta = verticalFov * getPI() / 180;
+		float halfHeight = tan(theta / 2);
+		float halfWidth = aspect * halfHeight;
+		origin = lookFrom;
+		w = unitVector(lookFrom - lookAt);
+		u = unitVector(cross(vup, w));
+		v = cross(w, u);
+		lowerLeftCorner = origin - halfWidth * u - halfHeight * v - w;
+		horizontal = 2 * halfWidth * u;
+		vertical = 2 * halfHeight * v;
 	}
-	Ray getRay(float u, float v) {
-		return Ray(origin, lowerLeftCorner + u * horizontal + v * vertical - origin);
+	Ray getRay(float s, float t) {
+		return Ray(origin, lowerLeftCorner + s * horizontal + t * vertical - origin);
 	}
 
 	Vec3 origin;
