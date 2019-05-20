@@ -5,11 +5,16 @@
 #include <fstream>
 #include <random>
 #include <functional>
+#include <vector>
+#include <thread>
+#include <atomic>
+#include <future>
 #include "sphere.h"
 #include "HitableList.h"
 #include "float.h"
 #include "Camera.h"
 #include "Material.h"
+#include "RayTracer.h"
 
 Vec3 color(const Ray& r, Hitable* world, int depth) {
 	HitRecord rec;
@@ -66,17 +71,58 @@ Hitable* randomScene() {
 	return new HitableList(list, i);
 }
 
+
+void parallelTrace(int nx, int ny, Camera& cam, Hitable*& world, int ns, Vec3** image)
+{
+	std::size_t max = nx * ny;
+	std::size_t cores = std::thread::hardware_concurrency();
+	volatile std::atomic<std::size_t> count(0);
+	std::vector<std::future<void>> futureVector;
+
+	while (cores--) {
+		futureVector.emplace_back(
+			std::async([=, &cam, &world, &count]() {
+				while (true) {
+					std::size_t index = count++;
+					if (index >= max) {
+						break;
+					}
+					std::size_t x = index % nx;
+					std::size_t y = index / nx;
+					Vec3 col(0, 0, 0);
+					for (int s = 0; s < ns; ++s) {
+						std::random_device rd;
+						std::mt19937 mt(rd());
+						std::uniform_real_distribution<float> distribution(0.0, 1.0);
+						auto rand = std::bind(distribution, mt);
+						float u = float(x + rand()) / float(nx);
+						float v = float(y + rand()) / float(ny);
+
+						Ray r(cam.getRay(u, v));
+						Vec3 p(r.pointAtParameter(2.0));
+						col += color(r, world, 0);
+						//std::cout << index << std::endl;
+					}
+					col /= float(ns);
+					col = Vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+					image[index] = new Vec3(col);
+				}
+				})
+		);
+	}
+}
+
+
 int main()
 {
 	std::ofstream output;
-	output.open("helloraytracer.ppm");
-	int nx = 466;
-	int ny = 200;
-	int ns = 10;
+	output.open("helloraytracerparallel.ppm");
+	int nx = 3440;
+	int ny = 1440;
+	int ns = 100;
 	
-	//Vec3** pixels = new Vec3 * [nx * ny];
-	
-	output << "P3\n" << nx << " " << ny << "\n255\n";
+	std::vector<Vec3> pixels;
+	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
 	/*
@@ -99,7 +145,21 @@ int main()
 	float aspectRatio = float(nx) / float(ny);
 
 	Camera cam(lookFrom, lookAt, upVector, FOV, aspectRatio, aperture, distanceToFocus);
-	//int pixeli = 0;
+
+	parallelTrace(nx, ny, cam, world, ns, image);
+
+	output << "P3\n" << nx << " " << ny << "\n255\n";
+	for (int j = ny - 1; j >= 0; --j) {
+		for (int i = 0; i < nx; ++i) {
+
+			int ir = int(255.99 * image[i + nx * j]->e[0]);
+			int ig = int(255.99 * image[i + nx * j]->e[1]);
+			int ib = int(255.99 * image[i + nx * j]->e[2]);
+			output << ir << " " << ig << " " << ib << "\n";
+		}
+	}
+
+	/*
 	for (int j = ny - 1; j >= 0; --j) {
 		for (int i = 0; i < nx; ++i) {
 			Vec3 col(0, 0, 0);
@@ -117,15 +177,20 @@ int main()
 			}
 			col /= float(ns);
 			col = Vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
-			//pixels[pixeli++] = new Vec3(col);
-			int ir = int(255.99 * col[0]);
-			int ig = int(255.99 * col[1]);
-			int ib = int(255.99 * col[2]);
+			pixels.push_back(col);
 			//std::cout << "*";
-			output << ir << " " << ig << " " << ib << "\n";
 		}
 		std::cout << j << std::endl;
 	}
+
+	output << "P3\n" << nx << " " << ny << "\n255\n";
+	for (auto it = pixels.begin(); it != pixels.end(); ++it) {
+
+		int ir = int(255.99 * it->e[0]);
+		int ig = int(255.99 * it->e[1]);
+		int ib = int(255.99 * it->e[2]);
+		output << ir << " " << ig << " " << ib << "\n";
+	}*/
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu
