@@ -30,27 +30,76 @@ Vec3 color(const Ray& r, Hitable* world, int depth) {
 	}
 }
 
+Hitable* randomScene() {
+	int n = 500;
+	Hitable** list = new Hitable* [n + 1];
+	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
+	int i = 1;
+	for (int a = -11; a < 11; ++a) {
+		for (int b = -11; b < 11; ++b) {
+			std::random_device rd;
+			std::mt19937 mt(rd());
+			std::uniform_real_distribution<float> distribution(0.0, 1.0);
+			auto rand = std::bind(distribution, mt);
+
+			float chooseMat = rand();
+			Vec3 center(a + 0.9 * rand(), 0.2, b + 0.9 * rand());
+			if ((center - Vec3(4, 0.2, 0)).length() > 0.9) {
+				if (chooseMat < 0.8) {			//diffuse
+					list[i++] = new Sphere(center, 0.2, new Lambertian(Vec3(rand() * rand(), rand() * rand(), rand() * rand())));
+				}
+				else if (chooseMat < 0.95) {	//metal
+					list[i++] = new Sphere(center, 0.2,
+						new Metal(Vec3(0.5 * (1 + rand()), 0.5 * (1 + rand()), 0.5 * (1 + rand())), 0.5 * rand()));
+				}
+				else {	//glass
+					list[i++] = new Sphere(center, 0.2, new Dielectric(1.5));
+				}
+			}
+		}
+	}
+
+	list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
+	list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
+	list[i++] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
+
+	return new HitableList(list, i);
+}
+
 int main()
 {
 	std::ofstream output;
 	output.open("helloraytracer.ppm");
-	int nx = 699;
-	int ny = 300;
-	int ns = 100;
+	int nx = 466;
+	int ny = 200;
+	int ns = 10;
+	
+	//Vec3** pixels = new Vec3 * [nx * ny];
+	
 	output << "P3\n" << nx << " " << ny << "\n255\n";
 
-	Hitable* list[4];
 	float R = cos(getPI() / 4);
-	//list[0] = new Sphere(Vec3(-R, 0, -1), R, new Lambertian(Vec3(0, 0, 1)));
-	//list[1] = new Sphere(Vec3(R, 0, -1), R, new Lambertian(Vec3(1, 0, 0)));
-	list[0] = new Sphere(Vec3(0, 0, -1), 0.5, new Lambertian(Vec3(0.1, 0.2, 0.5)));
-	list[1] = new Sphere(Vec3(0, -100.5, -1), 100, new Lambertian(Vec3(0.8, 0.8, 0.0)));
-	list[2] = new Sphere(Vec3(1, 0, -1), 0.5, new Metal(Vec3(0.8, 0.6, 0.2), 0.5));
-	list[3] = new Sphere(Vec3(-1, 0, -1), 0.5, new Dielectric(1.5));
+	/*
+	Hitable * list[4];
+	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
+	list[1] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
+	list[2] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
+	list[3] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 	//list[4] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(1.5));
 	Hitable* world = new HitableList(list, 4);
-	Camera cam(Vec3(-2, 2, 1), Vec3(0, 0, -1), Vec3(0, 1, 0), 40, float(nx) / float(ny));
+	*/
+	
+	Hitable* world = randomScene();
+	Vec3 lookFrom(11, 1.8, 2.8);
+	Vec3 lookAt(-1, 0.3, -1);
+	Vec3 upVector(0, 1, 0);
+	float distanceToFocus = (lookFrom - lookAt).length();
+	float aperture = 0.1;
+	float FOV = 20;
+	float aspectRatio = float(nx) / float(ny);
 
+	Camera cam(lookFrom, lookAt, upVector, FOV, aspectRatio, aperture, distanceToFocus);
+	//int pixeli = 0;
 	for (int j = ny - 1; j >= 0; --j) {
 		for (int i = 0; i < nx; ++i) {
 			Vec3 col(0, 0, 0);
@@ -68,6 +117,7 @@ int main()
 			}
 			col /= float(ns);
 			col = Vec3(sqrt(col[0]), sqrt(col[1]), sqrt(col[2]));
+			//pixels[pixeli++] = new Vec3(col);
 			int ir = int(255.99 * col[0]);
 			int ig = int(255.99 * col[1]);
 			int ib = int(255.99 * col[2]);
