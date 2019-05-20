@@ -6,8 +6,8 @@
 class Camera {
 public:
 	Camera() {
-		lowerLeftCorner = Vec3(-2.0, -1.0, -1.0);
-		horizontal = Vec3(4.0, 0.0, 0.0);
+		lowerLeftCorner = Vec3(-2.3, -1.0, -1.0);
+		horizontal = Vec3(4.6, 0.0, 0.0);
 		vertical = Vec3(0.0, 2.0, 0.0);
 		origin = Vec3(0.0, 0.0, 0.0);
 	}
