@@ -2,9 +2,9 @@
 //
 #include "RayTracer.hpp"
 
-Vec3 color(const Ray& r, std::unique_ptr<Hitable>& world, int depth) {
+Vec3 color(const Ray& r, Hitable& world, int depth) {
 	HitRecord rec;
-	if (world->hit(r, 0.001, FLT_MAX, rec)) {
+	if (world.hit(r, 0.001, FLT_MAX, rec)) {
 		Ray scattered;
 		Vec3 attenuation;
 		if (depth < 50 && rec.matPtr->scatter(r, rec, attenuation, scattered)) {
@@ -60,7 +60,7 @@ std::unique_ptr<Hitable> randomScene() {
 }
 
 
-void parallelTrace(int nx, int ny, Camera& cam, std::unique_ptr<Hitable>& world, int ns, Vec3** image)
+void parallelTrace(int nx, int ny, Camera& cam, Hitable& world, int ns, Vec3** image)
 {
 	std::size_t max = nx * ny;
 	std::size_t cores = std::thread::hardware_concurrency();
@@ -106,25 +106,25 @@ int main()
 	auto start = std::chrono::steady_clock::now();
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
-	int nx = 233;
-	int ny = 100;
+	int nx = 466;
+	int ny = 200;
 	int ns = 100;
 	
 	std::vector<Vec3> pixels;
 	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
-	/*
-	std::vector<std::shared_ptr<Hitable>>list;
-	list.reserve(4);
-	list.push_back(std::make_shared<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5))));
-	list.push_back(std::make_shared<Sphere>(Vec3(0, 1, 0), 1.0, std::make_shared<Dielectric>(1.5)));
-	list.push_back(std::make_shared<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.4, 0.2, 0.1))));
-	list.push_back(std::make_shared<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5), 0.0)));
-	//std::shared_ptr<Hitable> world = std::make_shared<HitableList>(list, 4);
-	*/
 	
-	std::unique_ptr<Hitable> world = randomScene();
+	std::vector<std::unique_ptr<Hitable>>list;
+	list.resize(4);
+	list[0] = (std::make_unique<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5))));
+	list[1] = (std::make_unique<Sphere>(Vec3(0, 1, 0), 1.0, std::make_shared<Dielectric>(1.5)));
+	list[2] = (std::make_unique<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.4, 0.2, 0.1))));
+	list[3] = (std::make_unique<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5), 0.0)));
+	std::unique_ptr<Hitable> world = std::make_unique<HitableList>(std::move(list), 4);
+	
+	
+	//std::unique_ptr<Hitable> world = randomScene();
 	Vec3 lookFrom(11, 1.8, 2.8);
 	Vec3 lookAt(-1, 0.3, -1);
 	Vec3 upVector(0, 1, 0);
@@ -135,7 +135,7 @@ int main()
 
 	Camera cam(lookFrom, lookAt, upVector, FOV, aspectRatio, aperture, distanceToFocus);
 
-	parallelTrace(nx, ny, cam, world, ns, image);
+	parallelTrace(nx, ny, cam, *world, ns, image);
 
 	output << "P3\n" << nx << " " << ny << "\n255\n";
 	for (int j = ny - 1; j >= 0; --j) {
@@ -147,9 +147,9 @@ int main()
 			output << ir << " " << ig << " " << ib << "\n";
 		}
 	}
+	output.close();
 	auto end = std::chrono::steady_clock::now();
 	std::cout << "Elapsed time in seconds : " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;
-	std::cout << std::endl;
 
 	/*
 	for (int j = ny - 1; j >= 0; --j) {
