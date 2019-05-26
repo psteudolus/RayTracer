@@ -21,13 +21,14 @@ Vec3 color(const Ray& r, Hitable* world, int depth) {
 	}
 }
 
-Hitable* randomScene() {
-	int n = 500;
+Hitable* randomScene(const int& n) {
 	Hitable** list = new Hitable* [n + 1];
 	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
 	int i = 1;
-	for (int a = -11; a < 11; ++a) {
-		for (int b = -11; b < 11; ++b) {
+	int aMax = (int)sqrt(n) / 2;
+	int bMax = (int)sqrt(n) / 2;
+	for (int a = -aMax; a < aMax; ++a) {
+		for (int b = - bMax; b < bMax; ++b) {
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_real_distribution<float> distribution(0.0, 1.0);
@@ -112,7 +113,7 @@ int main()
 	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
-	
+	/*
 	Hitable * list[4];
 	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
 	list[1] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
@@ -120,9 +121,9 @@ int main()
 	list[3] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 	//list[4] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(1.5));
 	Hitable* world = new HitableList(list, 4);
+	*/
 	
-	
-	//Hitable* world = randomScene();
+	Hitable* world = randomScene(200);
 	Vec3 lookFrom(11, 1.8, 2.8);
 	Vec3 lookAt(-1, 0.3, -1);
 	Vec3 upVector(0, 1, 0);
