@@ -103,8 +103,8 @@ int main()
 {
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
-	int nx = 233;
-	int ny = 100;
+	int nx = 2330;
+	int ny = 1000;
 	int ns = 100;
 	
 	std::vector<Vec3> pixels;
