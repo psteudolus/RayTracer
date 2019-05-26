@@ -21,15 +21,15 @@ Vec3 color(const Ray& r, Hitable& world, int depth) {
 	}
 }
 
-std::unique_ptr<Hitable> randomScene() {
-	int n = 500;
+std::unique_ptr<Hitable> randomScene(const int& n) {
 	std::vector<std::unique_ptr<Hitable>> list;
 	list.resize(n + 1);
-	//Hitable** list = new Hitable* [n + 1];
 	list[0] = std::make_unique<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5)));
 	int i = 1;
-	for (int a = -11; a < 11; ++a) {
-		for (int b = -11; b < 11; ++b) {
+	int aMax = (int)sqrt(n);
+	int bMax = (int)sqrt(n);
+	for (int a = -aMax/2; a < aMax/2; ++a) {
+		for (int b = -bMax/2; b < bMax/2; ++b) {
 			std::random_device rd;
 			std::mt19937 mt(rd());
 			std::uniform_real_distribution<float> distribution(0.0, 1.0);
@@ -106,15 +106,15 @@ int main()
 	auto start = std::chrono::steady_clock::now();
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
-	int nx = 466;
-	int ny = 200;
+	int nx = 699;
+	int ny = 300;
 	int ns = 100;
 	
 	std::vector<Vec3> pixels;
 	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
-	
+	/*
 	std::vector<std::unique_ptr<Hitable>>list;
 	list.resize(4);
 	list[0] = (std::make_unique<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5))));
@@ -122,9 +122,9 @@ int main()
 	list[2] = (std::make_unique<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.4, 0.2, 0.1))));
 	list[3] = (std::make_unique<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5), 0.0)));
 	std::unique_ptr<Hitable> world = std::make_unique<HitableList>(std::move(list), 4);
+	*/
 	
-	
-	//std::unique_ptr<Hitable> world = randomScene();
+	std::unique_ptr<Hitable> world = randomScene(100);
 	Vec3 lookFrom(11, 1.8, 2.8);
 	Vec3 lookAt(-1, 0.3, -1);
 	Vec3 upVector(0, 1, 0);
