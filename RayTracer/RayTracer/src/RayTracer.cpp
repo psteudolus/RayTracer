@@ -101,17 +101,18 @@ void parallelTrace(int nx, int ny, Camera& cam, Hitable*& world, int ns, Vec3** 
 
 int main()
 {
+	auto start = std::chrono::steady_clock::now();
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
-	int nx = 2330;
-	int ny = 1000;
+	int nx = 233;
+	int ny = 100;
 	int ns = 100;
 	
 	std::vector<Vec3> pixels;
 	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
-	
+	/*
 	Hitable * list[4];
 	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
 	list[1] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
@@ -119,9 +120,9 @@ int main()
 	list[3] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 	//list[4] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(1.5));
 	Hitable* world = new HitableList(list, 4);
+	*/
 	
-	
-	//Hitable* world = randomScene();
+	Hitable* world = randomScene();
 	Vec3 lookFrom(11, 1.8, 2.8);
 	Vec3 lookAt(-1, 0.3, -1);
 	Vec3 upVector(0, 1, 0);
@@ -144,7 +145,9 @@ int main()
 			output << ir << " " << ig << " " << ib << "\n";
 		}
 	}
-
+	auto end = std::chrono::steady_clock::now();
+	std::cout << "Elapsed time in seconds : " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;
+	std::cout << std::endl;
 	/*
 	for (int j = ny - 1; j >= 0; --j) {
 		for (int i = 0; i < nx; ++i) {

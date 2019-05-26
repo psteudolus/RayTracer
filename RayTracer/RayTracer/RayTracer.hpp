@@ -8,6 +8,7 @@
 #include <thread>
 #include <atomic>
 #include <future>
+#include <chrono>
 #include "src/Sphere.hpp"
 #include "src/HitableList.hpp"
 #include "src/Camera.hpp"
