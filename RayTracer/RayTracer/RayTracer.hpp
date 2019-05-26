@@ -9,7 +9,6 @@
 #include <atomic>
 #include <future>
 #include <chrono>
-#include <../packages/Microsoft.Gsl.0.1.2.1/build/native/include/span.h>
 #include "src/Sphere.hpp"
 #include "src/HitableList.hpp"
 #include "src/Camera.hpp"
