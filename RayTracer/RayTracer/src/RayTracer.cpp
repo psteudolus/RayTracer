@@ -103,6 +103,7 @@ void parallelTrace(int nx, int ny, Camera& cam, std::shared_ptr<Hitable>& world,
 
 int main()
 {
+	auto start = std::chrono::steady_clock::now();
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
 	int nx = 233;
@@ -146,6 +147,9 @@ int main()
 			output << ir << " " << ig << " " << ib << "\n";
 		}
 	}
+	auto end = std::chrono::steady_clock::now();
+	std::cout << "Elapsed time in seconds : " << std::chrono::duration_cast<std::chrono::seconds>(end - start).count() << std::endl;
+	std::cout << std::endl;
 
 	/*
 	for (int j = ny - 1; j >= 0; --j) {
