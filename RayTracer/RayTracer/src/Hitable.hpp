@@ -12,7 +12,7 @@ struct HitRecord {
 	//raw pointer, but the question here is "is it worth it to move to a smart pointer here?" 
 	//observer_ptr isn't part of the stl yet and in modern convention raw pointers in low level data structures for observation 
 	//is still accepted practice
-	Material* matPtr;
+	std::shared_ptr<Material> matPtr;
 };
 
 class Hitable {

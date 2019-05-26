@@ -3,7 +3,9 @@
 
 HitableList::HitableList() {}
 
-HitableList::HitableList(Hitable** l, int n) : list(l), listSize(n) {}
+HitableList::HitableList(std::vector<std::shared_ptr<Hitable>> l, int n) : list(l), listSize(n) {
+	l.reserve(listSize);
+}
 
 bool HitableList::hit(const Ray& r, float tMin, float tMax, HitRecord& rec) const {
 	HitRecord tempRec;
@@ -14,7 +16,7 @@ bool HitableList::hit(const Ray& r, float tMin, float tMax, HitRecord& rec) cons
 		if (list[i]->hit(r, tMin, closestSoFar, tempRec)) {
 			hitAnything = true;
 			closestSoFar = tempRec.t;
-			rec = tempRec;
+			rec = std::move(tempRec);
 		}
 	}
 	return hitAnything;

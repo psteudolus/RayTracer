@@ -2,7 +2,7 @@
 //
 #include "RayTracer.hpp"
 
-Vec3 color(const Ray& r, Hitable* world, int depth) {
+Vec3 color(const Ray& r, std::shared_ptr<Hitable>& world, int depth) {
 	HitRecord rec;
 	if (world->hit(r, 0.001, FLT_MAX, rec)) {
 		Ray scattered;
@@ -21,10 +21,12 @@ Vec3 color(const Ray& r, Hitable* world, int depth) {
 	}
 }
 
-Hitable* randomScene() {
+std::shared_ptr<Hitable> randomScene() {
 	int n = 500;
-	Hitable** list = new Hitable* [n + 1];
-	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
+	std::vector<std::shared_ptr<Hitable>> list;
+	list.resize(n + 1);
+	//Hitable** list = new Hitable* [n + 1];
+	list[0] = std::make_shared<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5)));
 	int i = 1;
 	for (int a = -11; a < 11; ++a) {
 		for (int b = -11; b < 11; ++b) {
@@ -37,28 +39,28 @@ Hitable* randomScene() {
 			Vec3 center(a + 0.9 * rand(), 0.2, b + 0.9 * rand());
 			if ((center - Vec3(4, 0.2, 0)).length() > 0.9) {
 				if (chooseMat < 0.8) {			//diffuse
-					list[i++] = new Sphere(center, 0.2, new Lambertian(Vec3(rand() * rand(), rand() * rand(), rand() * rand())));
+					list[i++] = std::make_shared<Sphere>(center, 0.2, std::make_shared<Lambertian>(Vec3(rand() * rand(), rand() * rand(), rand() * rand())));
 				}
 				else if (chooseMat < 0.95) {	//metal
-					list[i++] = new Sphere(center, 0.2,
-						new Metal(Vec3(0.5 * (1 + rand()), 0.5 * (1 + rand()), 0.5 * (1 + rand())), 0.5 * rand()));
+					list[i++] = std::make_shared<Sphere>(center, 0.2,
+						std::make_shared<Metal>(Vec3(0.5 * (1 + rand()), 0.5 * (1 + rand()), 0.5 * (1 + rand())), 0.5 * rand()));
 				}
 				else {	//glass
-					list[i++] = new Sphere(center, 0.2, new Dielectric(1.5));
+					list[i++] = std::make_shared<Sphere>(center, 0.2, std::make_shared<Dielectric>(1.5));
 				}
 			}
 		}
 	}
 
-	list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
-	list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
-	list[i++] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
+	list[i++] = std::make_shared<Sphere>(Vec3(0, 1, 0), 1.0, std::make_shared<Dielectric>(1.5));
+	list[i++] = std::make_shared<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.4, 0.2, 0.1)));
+	list[i++] = std::make_shared<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5), 0.0));
 
-	return new HitableList(list, i);
+	return std::make_shared<HitableList>(list, i);
 }
 
 
-void parallelTrace(int nx, int ny, Camera& cam, Hitable*& world, int ns, Vec3** image)
+void parallelTrace(int nx, int ny, Camera& cam, std::shared_ptr<Hitable>& world, int ns, Vec3** image)
 {
 	std::size_t max = nx * ny;
 	std::size_t cores = std::thread::hardware_concurrency();
@@ -103,25 +105,25 @@ int main()
 {
 	std::ofstream output;
 	output.open("helloraytracerrefactored.ppm");
-	int nx = 2330;
-	int ny = 1000;
+	int nx = 233;
+	int ny = 100;
 	int ns = 100;
 	
 	std::vector<Vec3> pixels;
 	Vec3** image = new Vec3 * [nx * ny];
 
 	float R = cos(getPI() / 4);
+	/*
+	std::vector<std::shared_ptr<Hitable>>list;
+	list.reserve(4);
+	list.push_back(std::make_shared<Sphere>(Vec3(0, -1000, 0), 1000, std::make_shared<Lambertian>(Vec3(0.5, 0.5, 0.5))));
+	list.push_back(std::make_shared<Sphere>(Vec3(0, 1, 0), 1.0, std::make_shared<Dielectric>(1.5)));
+	list.push_back(std::make_shared<Sphere>(Vec3(-4, 1, 0), 1.0, std::make_shared<Lambertian>(Vec3(0.4, 0.2, 0.1))));
+	list.push_back(std::make_shared<Sphere>(Vec3(4, 1, 0), 1.0, std::make_shared<Metal>(Vec3(0.7, 0.6, 0.5), 0.0)));
+	//std::shared_ptr<Hitable> world = std::make_shared<HitableList>(list, 4);
+	*/
 	
-	Hitable * list[4];
-	list[0] = new Sphere(Vec3(0, -1000, 0), 1000, new Lambertian(Vec3(0.5, 0.5, 0.5)));
-	list[1] = new Sphere(Vec3(0, 1, 0), 1.0, new Dielectric(1.5));
-	list[2] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
-	list[3] = new Sphere(Vec3(4, 1, 0), 1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
-	//list[4] = new Sphere(Vec3(-1, 0, -1), -0.45, new Dielectric(1.5));
-	Hitable* world = new HitableList(list, 4);
-	
-	
-	//Hitable* world = randomScene();
+	std::shared_ptr<Hitable> world = randomScene();
 	Vec3 lookFrom(11, 1.8, 2.8);
 	Vec3 lookAt(-1, 0.3, -1);
 	Vec3 upVector(0, 1, 0);

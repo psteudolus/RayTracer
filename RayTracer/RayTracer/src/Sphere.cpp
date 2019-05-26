@@ -2,7 +2,7 @@
 
 Sphere::Sphere() {}
 
-Sphere::Sphere(Vec3 cen, float r, Material* matPtrIn) : center(cen), radius(r), matPtr(matPtrIn) {};
+Sphere::Sphere(Vec3 cen, float r, std::shared_ptr<Material> matPtrIn) : center(cen), radius(r), matPtr(matPtrIn) {};
 
 bool Sphere::hit(const Ray& r, float tMin, float tMax, HitRecord& rec) const {
 	Vec3 oc = r.origin() - center;
